@@ -13,7 +13,7 @@
     <link
       rel="icon"
       type="image/png"
-      href="https://img.icons8.com/ios-filled/50/2563eb/bug.png"
+      href="https://img.icons8.com/?size=100&id=hJecpPVXgZ5Y&format=png&color=000000"
     />
 
     <link rel="stylesheet" href="style.css" />
@@ -95,6 +95,12 @@
           
           <div class="detail-label">Số điện thoại:</div>
           <div id="txtSoDienThoai" class="detail-value">Chưa có dữ liệu</div>
+
+          <div class="detail-label">Ngày hoạt động:</div>
+          <div id="txtNgayHoatDong" class="detail-value">Chưa có dữ liệu</div>
+
+          <div class="detail-label">Ngành nghề chính:</div>
+          <div id="txtNganhNgheChinh" class="detail-value">Chưa có dữ liệu</div>
 
           <div class="detail-label">Tên Viết Tắt:</div>
           <div id="txtTenVietTat" class="detail-value">Chưa có dữ liệu</div>
@@ -212,6 +218,14 @@
               if (document.getElementById("txtTenGiaoDich")) {
                 document.getElementById("txtTenGiaoDich").innerText =
                   data.ten_giao_dich;
+              }
+              if (document.getElementById("txtNgayHoatDong")) {
+                document.getElementById("txtNgayHoatDong").innerText =
+                  data.ngay_hoat_dong;
+              }
+              if (document.getElementById("txtNganhNgheChinh")) {
+                document.getElementById("txtNganhNgheChinh").innerText =
+                  data.nganh_nghe_chinh;
               }
 
               // Hiển thị khung Detail Card mượt mà lên màn hình

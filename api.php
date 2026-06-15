@@ -1,10 +1,17 @@
 <?php
+
 // Tắt hoàn toàn việc hiển thị các cảnh báo hệ thống (Deprecated/Warning) ra màn hình để tránh làm hỏng JSON
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', 0);
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+
+function convertDate($value) {
+    if (empty($value)) return $value;
+    $date = DateTime::createFromFormat('Y-m-d', trim($value));
+    return $date ? $date->format('d-m-Y') : $value;
+}
 
 // 1. Lấy mã số thuế từ URL gửi lên
 $mst = isset($_GET['mst']) ? trim($_GET['mst']) : '';
@@ -50,6 +57,8 @@ $tenGiaoDich = "Chưa cập nhật";
 $coQuanThue = "Chưa cập nhật";
 $trangThai = "Chưa cập nhật";
 $tenVietTat = "Chưa cập nhật";
+$ngayHoatDong = "Chưa cập nhật";
+$nganhNgheChinh = "Chưa cập nhật";
 
 // Khởi tạo DOM Document đọc mã UTF-8 sạch lỗi font
 $dom = new DOMDocument();
@@ -150,6 +159,29 @@ if ($soDienThoaiNode->length > 0) {
     $soDienThoai = trim($soDienThoaiNode->item(0)->textContent);
 }
 
+// $ngayHoatDong = null;
+$ngayHoatDongNode = $xpath->query("//td[contains(text(), 'Ngày hoạt động')]/following-sibling::td[1]");
+if ($ngayHoatDongNode->length > 0) {
+    $ngayHoatDong = trim($ngayHoatDongNode->item(0)->nodeValue);
+    $ngayHoatDong = convertDate($ngayHoatDong);
+
+    // Debug tạm thời
+    // error_log("RAW: " . json_encode($ngayHoatDong));
+    // $converted = convertDate($ngayHoatDong);
+    // error_log("CONVERTED: " . json_encode($converted));
+
+    // $ngayHoatDong = $converted;
+    
+}
+
+$nganhNgheChinhNode = $xpath->query("//td[contains(text(), 'Ngành nghề chính')]/following-sibling::td[1]/a[1]");
+if ($nganhNgheChinhNode->length > 0) {
+    $nganhNgheChinh = trim($nganhNgheChinhNode->item(0)->nodeValue);
+}
+
+// $nodes = $xpath->query("//td[contains(., 'Ngành nghề chính')]/following-sibling::td[1]/a[1]");
+// $nganhNgheChinh = $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
+
 
 // Hàm dọn dẹp các ký tự khoảng trắng hoặc định dạng dư thừa ở đầu/cuối chuỗi
 function clean_output($str) {
@@ -166,6 +198,8 @@ $coQuanThue = clean_output($coQuanThue);
 $soDienThoai = clean_output($soDienThoai);
 $trangThai = clean_output($trangThai);
 $tenVietTat = clean_output($tenVietTat);
+$ngayHoatDong = clean_output($ngayHoatDong);
+$nganhNgheChinh = clean_output($nganhNgheChinh);
 
 
 // 4. Trả kết quả JSON đầy đủ các trường mới về cho Frontend
@@ -175,10 +209,12 @@ echo json_encode([
     "nguoi_dai_dien" => !empty($nguoiDaiDien) ? $nguoiDaiDien : "Chưa cập nhật",
     "dia_chi" => !empty($diaChi) ? $diaChi : "Chưa cập nhật",
     "so_dien_thoai" => !empty($soDienThoai) ? $soDienThoai : "Chưa cập nhật",
+    "ngay_hoat_dong" => !empty($ngayHoatDong) ? $ngayHoatDong : "Chưa cập nhật",
     "ten_giao_dich" => !empty($tenGiaoDich) ? $tenGiaoDich : "Chưa cập nhật",
     "ten_viet_tat" => !empty($tenVietTat) ? $tenVietTat : "Chưa cập nhật",
     "co_quan_thue" => !empty($coQuanThue) ? $coQuanThue : "Chưa cập nhật",
-    "trang_thai" => !empty($trangThai) ? $trangThai : "Chưa cập nhật"
+    "trang_thai" => !empty($trangThai) ? $trangThai : "Chưa cập nhật",
+    "nganh_nghe_chinh" => !empty($nganhNgheChinh) ? $nganhNgheChinh : "Chưa cập nhật"
 ], JSON_UNESCAPED_UNICODE);
 exit;
 
