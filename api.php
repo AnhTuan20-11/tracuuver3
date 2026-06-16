@@ -79,28 +79,73 @@ if ($tenCongTyNode->length > 0) {
 // if ($nguoiDaiDienNode->length > 0) {
 //     $nguoiDaiDien = trim($nguoiDaiDienNode->item(0)->nodeValue);
 // }
+
+//-----------------
+// $nguoiDaiDienNode = $xpath->query(
+//     "//td[contains(text(),'Người đại diện')]
+//     /following-sibling::td[1]/span[1]/a[1]"
+// );
+
+// if ($nguoiDaiDienNode->length > 0) {
+//     $td = $nguoiDaiDienNode->item(0);
+
+//     $nguoiDaiDien = trim($td->textContent);
+
+//     // Thêm xuống dòng trước mỗi công ty trong danh sách
+//     $nguoiDaiDien = preg_replace(
+//         '/(CÔNG TY|VĂN PHÒNG)/u',
+//         "\n$1",
+//         $nguoiDaiDien
+//     );
+
+//     $nguoiDaiDien = preg_replace(
+//         '/\s+/',
+//         ' ',
+//         $nguoiDaiDien
+//     );
+// }
+
+// xún dòng ---------------
 $nguoiDaiDienNode = $xpath->query(
-    "//td[contains(text(),'Người đại diện')]
-    /following-sibling::td[1]"
+    "//td[contains(text(),'Người đại diện')]/following-sibling::td[1]"
 );
 
 if ($nguoiDaiDienNode->length > 0) {
     $td = $nguoiDaiDienNode->item(0);
 
-    $nguoiDaiDien = trim($td->textContent);
+    // Lấy tên người đại diện
+    $tenNode = $xpath->query(".//span[@itemprop='name']/a", $td);
 
-    // Thêm xuống dòng trước mỗi công ty trong danh sách
-    $nguoiDaiDien = preg_replace(
-        '/(CÔNG TY|VĂN PHÒNG)/u',
-        "\n$1",
-        $nguoiDaiDien
-    );
+    $tenNguoi = "";
+    if ($tenNode->length > 0) {
+        $tenNguoi = trim($tenNode->item(0)->textContent);
+    }
 
-    $nguoiDaiDien = preg_replace(
-        '/\s+/',
-        ' ',
-        $nguoiDaiDien
-    );
+    // Lấy danh sách công ty
+    $liNodes = $xpath->query(".//ul/li", $td);
+
+    $dsCongTy = [];
+
+    foreach ($liNodes as $li) {
+        $dsCongTy[] = trim($li->textContent);
+    }
+
+    // Ghép chuỗi
+    $nguoiDaiDien = $tenNguoi;
+
+    if (!empty($dsCongTy)) {
+        $nguoiDaiDien .= "\nNgoài ra, {$tenNguoi} còn đại diện các doanh nghiệp, đơn vị:\n";
+        $nguoiDaiDien .= implode("\n", $dsCongTy);
+    }
+}
+
+$nguoiDaiDien = $tenNguoi; // Chỉ tên
+
+// $nguoiDaiDienFull = $tenNguoi;
+
+if (!empty($dsCongTy)) {
+    // $nguoiDaiDienFull .= "\nNgoài ra, {$tenNguoi} còn đại diện các doanh nghiệp, đơn vị:\n";
+    $nguoiDaiDienFull .= implode("\n", $dsCongTy);
 }
 
 // 3. Dùng XPath bốc "Địa chỉ trụ sở"
@@ -207,6 +252,7 @@ echo json_encode([
     "success" => true, 
     "ten_cong_ty" => !empty($tenCongTy) ? $tenCongTy : "Chưa cập nhật",
     "nguoi_dai_dien" => !empty($nguoiDaiDien) ? $nguoiDaiDien : "Chưa cập nhật",
+    "nguoi_dai_dien_full" => !empty($nguoiDaiDienFull) ? $nguoiDaiDienFull : "Chưa cập nhật",
     "dia_chi" => !empty($diaChi) ? $diaChi : "Chưa cập nhật",
     "so_dien_thoai" => !empty($soDienThoai) ? $soDienThoai : "Chưa cập nhật",
     "ngay_hoat_dong" => !empty($ngayHoatDong) ? $ngayHoatDong : "Chưa cập nhật",

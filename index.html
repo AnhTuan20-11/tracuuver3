@@ -40,7 +40,7 @@
         <tbody>
           <tr>
             <td><input class="mst" placeholder="Nhập MST..." /></td>
-            <td><input placeholder="Nhập SĐT..." /></td>
+            <td><input class="sdt" placeholder="Nhập SĐT..." /></td>
             <td>
               <input
                 class="tencty"
@@ -75,6 +75,9 @@
           nghiệp
         </div>
         <div class="detail-grid">
+          <div class="detail-label">MST:</div>
+          <div id="txtMST" class="detail-value">Chưa có dữ liệu</div>
+
           <div class="detail-label">Tên CTY:</div>
           <div id="txtTencty" class="detail-value">Chưa có dữ liệu</div>
 
@@ -92,7 +95,7 @@
 
           <div class="detail-label">Cơ quan thuế:</div>
           <div id="txtCoQuanThue" class="detail-value">Chưa có dữ liệu</div>
-          
+
           <div class="detail-label">Số điện thoại:</div>
           <div id="txtSoDienThoai" class="detail-value">Chưa có dữ liệu</div>
 
@@ -104,6 +107,16 @@
 
           <div class="detail-label">Tên Viết Tắt:</div>
           <div id="txtTenVietTat" class="detail-value">Chưa có dữ liệu</div>
+        </div>
+      </div>
+
+      <div id="popupDaiDien" class="popup">
+        <div class="popup-content">
+          <span class="close">&times;</span>
+
+          <h3>Người đại diện công ty khác</h3>
+
+          <div id="popupBody"></div>
         </div>
       </div>
 
@@ -183,6 +196,7 @@
           // }
 
           if (data.success) {
+            // document.getElementById("txtMST").innerText = mst;
             // 1. Điền tên công ty vào ô input của dòng hiện tại trong bảng
             row.querySelector(".tencty").value = data.ten_cong_ty;
             // Đánh dấu đã tra cứu thành công
@@ -191,9 +205,16 @@
             // 2. Điền dữ liệu vào khung chi tiết (Detail Card) phía dưới
             const detailCard = document.getElementById("detailCard");
             if (detailCard) {
+              document.getElementById("txtMST").innerText = mst;
               document.getElementById("txtTencty").innerText = data.ten_cong_ty;
-              document.getElementById("txtNguoiDaiDien").innerText =
-                data.nguoi_dai_dien;
+              const txtNguoi = document.getElementById("txtNguoiDaiDien");
+
+              txtNguoi.innerText = data.nguoi_dai_dien;
+              txtNguoi.dataset.full = data.nguoi_dai_dien_full;
+
+              // cho thấy có thể click
+              txtNguoi.style.cursor = "pointer";
+              txtNguoi.style.color = "#2563eb";
               document.getElementById("txtDiaChi").innerText = data.dia_chi;
               // document.getElementById("txtTenVietTat").innerText = data.ten_viet_tat;
 
@@ -228,8 +249,60 @@
                   data.nganh_nghe_chinh;
               }
 
-              // Hiển thị khung Detail Card mượt mà lên màn hình
-              detailCard.classList.add("show");
+              // 2. Điền dữ liệu vào khung chi tiết (Detail Card) phía dưới
+              const detailCard = document.getElementById("detailCard");
+              if (detailCard) {
+                // Tạo danh sách ánh xạ giữa ID thẻ hiển thị và trường dữ liệu từ JSON trả về
+                const fields = [
+                  { id: "txtTencty", value: data.ten_cong_ty },
+                  { id: "txtTenGiaoDich", value: data.ten_giao_dich },
+                  { id: "txtNguoiDaiDien", value: data.nguoi_dai_dien },
+                  { id: "txtDiaChi", value: data.dia_chi },
+                  { id: "txtTrangThai", value: data.trang_thai },
+                  { id: "txtCoQuanThue", value: data.co_quan_thue },
+                  { id: "txtSoDienThoai", value: data.so_dien_thoai },
+                  { id: "txtNgayHoatDong", value: data.ngay_hoat_dong },
+                  { id: "txtNganhNgheChinh", value: data.nganh_nghe_chinh },
+                  { id: "txtTenVietTat", value: data.ten_viet_tat },
+                ];
+
+                fields.forEach((field) => {
+                  const valueElement = document.getElementById(field.id);
+                  if (valueElement) {
+                    // Tìm thẻ label đứng ngay trước nó trong cấu trúc HTML
+                    const labelElement = valueElement.previousElementSibling;
+
+                    // Điều kiện kiểm tra dữ liệu trống hoặc chưa cập nhật
+                    if (
+                      !field.value ||
+                      field.value === "Chưa cập nhật" ||
+                      field.value.trim() === ""
+                    ) {
+                      // Ẩn cả tiêu đề và nội dung
+                      valueElement.style.display = "none";
+                      if (
+                        labelElement &&
+                        labelElement.classList.contains("detail-label")
+                      ) {
+                        labelElement.style.display = "none";
+                      }
+                    } else {
+                      // Có dữ liệu hợp lệ: Hiển thị lại và điền chữ vào
+                      valueElement.style.display = "";
+                      valueElement.innerText = field.value;
+                      if (
+                        labelElement &&
+                        labelElement.classList.contains("detail-label")
+                      ) {
+                        labelElement.style.display = "";
+                      }
+                    }
+                  }
+                });
+
+                // Hiển thị khung Detail Card mượt mà lên màn hình
+                detailCard.classList.add("show");
+              }
             }
           } else {
             row.querySelector(".tencty").value = "Không tìm thấy công ty!";
@@ -395,6 +468,37 @@
 
         // Xóa tên công ty cũ
         row.querySelector(".tencty").value = "";
+        row.querySelector(".sdt").value = "";
+      });
+
+      document
+        .getElementById("txtNguoiDaiDien")
+        .addEventListener("click", function () {
+          let content = this.dataset.full || "";
+
+          // Nếu không có dữ liệu
+          if (
+            content.trim() === "" ||
+            content.trim().toLowerCase() === "chưa cập nhật"
+          ) {
+            content = "Không có dữ liệu";
+          }
+
+          document.getElementById("popupBody").innerText = content;
+
+          document.getElementById("popupDaiDien").classList.add("show");
+        });
+
+      document.querySelector(".close").addEventListener("click", function () {
+        document.getElementById("popupDaiDien").classList.remove("show");
+      });
+
+      window.addEventListener("click", function (e) {
+        const popup = document.getElementById("popupDaiDien");
+
+        if (e.target === popup) {
+          popup.classList.remove("show");
+        }
       });
     </script>
   </body>
