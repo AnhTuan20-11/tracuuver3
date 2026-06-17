@@ -105,6 +105,9 @@
           <div class="detail-label">Ngành nghề chính:</div>
           <div id="txtNganhNgheChinh" class="detail-value">Chưa có dữ liệu</div>
 
+          <div class="detail-label">Loại hình DN:</div>
+          <div id="txtLoaiHinhDN" class="detail-value">Chưa có dữ liệu</div>
+
           <div class="detail-label">Tên Viết Tắt:</div>
           <div id="txtTenVietTat" class="detail-value">Chưa có dữ liệu</div>
         </div>
@@ -171,11 +174,17 @@
         }
 
         try {
+          // console.log("Đang tra MST:", mst);
           // Gọi trực tiếp đến file api.php trên cùng Server PHP (localhost:8000)
           const response = await fetch(
-            "api.php?mst=" + encodeURIComponent(mst),
+            "api.php?mst=" + encodeURIComponent(mst) + "&_=" + Date.now(),
+            {
+              cache: "no-store",
+            },
           );
           const data = await response.json();
+
+          // console.log("Kết quả API:", data);
 
           // Kiểm tra nguồn dữ liệu: từ cache (database) hay từ thongtincongty.vn
           // if (data.from_cache) {
@@ -244,6 +253,10 @@
                 document.getElementById("txtNgayHoatDong").innerText =
                   data.ngay_hoat_dong;
               }
+              if (document.getElementById("txtLoaiHinhDN")) {
+                document.getElementById("txtLoaiHinhDN").innerText =
+                  data.loai_hinh_dn;
+              }
               if (document.getElementById("txtNganhNgheChinh")) {
                 document.getElementById("txtNganhNgheChinh").innerText =
                   data.nganh_nghe_chinh;
@@ -262,6 +275,7 @@
                   { id: "txtCoQuanThue", value: data.co_quan_thue },
                   { id: "txtSoDienThoai", value: data.so_dien_thoai },
                   { id: "txtNgayHoatDong", value: data.ngay_hoat_dong },
+                  { id: "txtLoaiHinhDN", value: data.loai_hinh_dn },
                   { id: "txtNganhNgheChinh", value: data.nganh_nghe_chinh },
                   { id: "txtTenVietTat", value: data.ten_viet_tat },
                 ];
@@ -422,23 +436,6 @@
         }
       }
 
-      // Nhấn Enter trong ô MST sẽ tự động tra cứu
-      document.addEventListener("keydown", function (e) {
-        if (e.key !== "Enter") return;
-
-        const input = e.target;
-
-        // Chỉ áp dụng cho ô MST
-        if (input.classList.contains("mst")) {
-          e.preventDefault();
-
-          const row = input.closest("tr");
-          const btnTraCuu = row.querySelector(".btn-tracuu");
-
-          traCuu(btnTraCuu);
-        }
-      });
-
       // ======================
       // QUẢN LÝ TRẠNG THÁI MST
       // ======================
@@ -474,17 +471,19 @@
       document
         .getElementById("txtNguoiDaiDien")
         .addEventListener("click", function () {
+          console.log("dataset.full =", this.dataset.full);
+
           let content = this.dataset.full || "";
 
-          // Nếu không có dữ liệu
           if (
             content.trim() === "" ||
             content.trim().toLowerCase() === "chưa cập nhật"
           ) {
-            content = "Không có dữ liệu";
+            document.getElementById("popupBody").innerHTML =
+              '<div class="empty-data">📭 Không có dữ liệu</div>';
+          } else {
+            document.getElementById("popupBody").innerText = content;
           }
-
-          document.getElementById("popupBody").innerText = content;
 
           document.getElementById("popupDaiDien").classList.add("show");
         });

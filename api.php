@@ -58,6 +58,7 @@ $coQuanThue = "Chưa cập nhật";
 $trangThai = "Chưa cập nhật";
 $tenVietTat = "Chưa cập nhật";
 $ngayHoatDong = "Chưa cập nhật";
+$loaiHinhDN = "Chưa cập nhật";
 $nganhNgheChinh = "Chưa cập nhật";
 
 // Khởi tạo DOM Document đọc mã UTF-8 sạch lỗi font
@@ -224,6 +225,11 @@ if ($nganhNgheChinhNode->length > 0) {
     $nganhNgheChinh = trim($nganhNgheChinhNode->item(0)->nodeValue);
 }
 
+$loaiHinhDNNode = $xpath->query("//td[contains(text(), 'Loại hình DN')]/following-sibling::td[1]");
+if ($loaiHinhDNNode->length > 0) {
+    $loaiHinhDN = trim($loaiHinhDNNode->item(0)->nodeValue);
+}
+
 // $nodes = $xpath->query("//td[contains(., 'Ngành nghề chính')]/following-sibling::td[1]/a[1]");
 // $nganhNgheChinh = $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
 
@@ -245,7 +251,7 @@ $trangThai = clean_output($trangThai);
 $tenVietTat = clean_output($tenVietTat);
 $ngayHoatDong = clean_output($ngayHoatDong);
 $nganhNgheChinh = clean_output($nganhNgheChinh);
-
+$loaiHinhDN = clean_output($loaiHinhDN);
 
 // 4. Trả kết quả JSON đầy đủ các trường mới về cho Frontend
 echo json_encode([
@@ -260,7 +266,8 @@ echo json_encode([
     "ten_viet_tat" => !empty($tenVietTat) ? $tenVietTat : "Chưa cập nhật",
     "co_quan_thue" => !empty($coQuanThue) ? $coQuanThue : "Chưa cập nhật",
     "trang_thai" => !empty($trangThai) ? $trangThai : "Chưa cập nhật",
-    "nganh_nghe_chinh" => !empty($nganhNgheChinh) ? $nganhNgheChinh : "Chưa cập nhật"
+    "nganh_nghe_chinh" => !empty($nganhNgheChinh) ? $nganhNgheChinh : "Chưa cập nhật",
+    "loai_hinh_dn" => !empty($loaiHinhDN) ? $loaiHinhDN : "Chưa cập nhật"
 ], JSON_UNESCAPED_UNICODE);
 exit;
 
