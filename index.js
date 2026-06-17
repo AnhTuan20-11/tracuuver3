@@ -1,12 +1,8 @@
 const express = require("express");
-const puppeteer = require("puppeteer-extra");
-const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const { connect } = require("puppeteer-real-browser");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Kích hoạt chế độ ẩn mình chống bị Cloudflare phát hiện
-puppeteer.use(StealthPlugin());
 
 app.get("/api", async (req, res) => {
   const mst = req.query.mst;
@@ -14,72 +10,54 @@ app.get("/api", async (req, res) => {
     return res.status(400).send("Thiếu tham số mst");
   }
 
-  console.log(`[Render] Tiến hành cào tàng hình cho MST: ${mst}`);
+  console.log(`[Render] Đang kết nối trình duyệt thực tế tra cứu MST: ${mst}`);
 
-  let browser;
   try {
-    browser = await puppeteer.launch({
+    // Khởi chạy trình duyệt bằng lõi chống Cloudflare chuyên dụng
+    const { browser, page } = await connect({
       headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--window-size=1440,900",
-        "--lang=vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
-      ]
+        "--disable-dev-shm-usage"
+      ],
+      turnstile: true, // Tự động click ô "Tôi không phải là robot" nếu Cloudflare yêu cầu
     });
 
-    const page = await browser.newPage();
-    
-    // 1. Cấu hình các thông số trình duyệt người dùng thật (Bypass Cloudflare)
-    await page.setViewport({ width: 1440, height: 900 });
+    // Cấu hình định dạng như người dùng thật lướt mạng
     await page.setUserAgent(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/125.0.0.0 Safari/537.36"
     );
 
-    // Xóa bỏ hoàn toàn vết tích biến webdriver chạy ngầm
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-      window.chrome = { runtime: {} };
-    });
-
-    // 2. Đi tới trang masothue với thời gian chờ tối đa 60 giây
-    const response = await page.goto("https://masothue.com/" + mst, {
+    // Truy cập trực tiếp trang mã số thuế
+    await page.goto("https://masothue.com/" + mst, {
       waitUntil: "networkidle2",
       timeout: 60000
     });
 
-    // Nếu gặp trang chặn hoặc lỗi kết nối, ném lỗi ra để xử lý
-    if (!response) {
-      throw new Error("Không thể kết nối tới masothue.com");
-    }
+    // Chờ thêm 5 giây ngầm để hệ thống đồng bộ mã hóa Cloudflare nhả dữ liệu sạch ra
+    await new Promise(r => setTimeout(r, 5000));
 
-    // 3. Đợi thêm 4 giây giả lập hành vi người thật cuộn chuột đọc trang để Cloudflare nhả dữ liệu sạch ra
-    await new Promise(r => setTimeout(r, 4000));
-
-    // Lấy toàn bộ nội dung HTML sau khi đã vượt qua màn hình kiểm tra bảo mật
+    // Lấy toàn bộ HTML sạch sau khi tường lửa đã mở cửa
     const html = await page.content();
     
+    // Đóng trình duyệt giải phóng RAM cho gói Render Free
+    await browser.close();
+
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.send(html);
 
   } catch (err) {
-    console.error("Lỗi Puppeteer Stealth:", err.message);
+    console.error("Lỗi hệ thống chống chặn:", err.message);
     return res.status(500).send(`Lỗi hệ thống khi cào dữ liệu: ${err.message}`);
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 });
 
-// Trang chủ hiển thị hệ thống chạy bình thường
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send("Server Node.js API cho dự án Tra cứu MST đang hoạt động ổn định!");
+  res.send("Server Node.js API cho dự án Tra cứu MST đang hoạt động tốt!");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server đang vận hành tại port ${PORT}`);
 });

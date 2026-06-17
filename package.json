@@ -12,11 +12,9 @@
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
-    "express": "^4.19.2",
+    "express": "^4.22.2",
     "jsdom": "^29.1.1",
-    "puppeteer": "^22.10.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-real-browser": "^1.4.4"
   },
   "repository": {
     "type": "git",
